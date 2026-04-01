@@ -10,28 +10,25 @@
 🤖 可直接通过 AstrBot 指令调用
 📌 使用方式
 
-发送指令：
-
-电脑截图
-
+发送指令：电脑截图
 即可获取当前屏幕截图。
-
 🛠 安装方法
 1. 克隆仓库
 git clone https://github.com/KONEWS/astrbot_plugin_screenshot.git
+
 2. 放入插件目录
-
 将文件夹放入 AstrBot 插件目录中：
-
 astrbot_plugin_screenshot/
 3. 安装依赖
 pip install pillow
+
 ⚙️ 插件信息
 项目	内容
 插件名	astrbot_plugin_screenshot
 作者	KONEHWS
 版本	1.1.0
 平台	Windows
+
 ⚠️ 注意事项
 仅支持 Windows 系统
 在远程桌面（RDP）环境下可能截图失败
@@ -39,13 +36,10 @@ pip install pillow
 🧠 实现原理
 
 插件基于 PIL.ImageGrab 实现截图，并通过：
-
 ctypes.windll.user32.SetProcessDPIAware()
-
 解决高 DPI 缩放带来的截图偏移问题。
 
 📷 示例
-
 执行指令后，Bot 会返回当前屏幕截图图片。
 
 📄 开源协议
