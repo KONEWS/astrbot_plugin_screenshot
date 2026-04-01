@@ -1,37 +1,50 @@
 import os
 import ctypes
+import time
+import platform
 from PIL import ImageGrab
-# 【核心修复】不使用星号模糊导入，而是精准指定我们需要 AstrBot 的 filter 和事件工具
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
+from astrbot.api import logger # 引入官方规范日志工具
 
-@register("python_screenshot", "知我麻社", "使用Python原生截图，解决Win11缩放截不全问题", "1.0.0")
+@register("python_screenshot", "知我麻社", "适配Win11缩放的全屏截图插件", "1.1.0")
 class PythonScreenshotPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
 
-    # 自定义的触发词
     @filter.command("电脑截图")
     async def take_screenshot(self, event: AstrMessageEvent):
-        # 先回复一句提示，让用户知道机器人在干活
+        # 1. 平台依赖显式约束：判断是否为 Windows
+        if platform.system() != "Windows":
+            yield event.plain_result("❌ 该插件仅支持 Windows 系统环境。")
+            return
+
         yield event.plain_result("正在截取当前屏幕，请稍候...")
-        
+        logger.info("收到截图请求，正在执行...")
+
         try:
-            # 调用系统底层接口，强制适配高 DPI 缩放，防止画面被裁剪
+            # 解决高 DPI 缩放问题
             ctypes.windll.user32.SetProcessDPIAware()
             
-            # 定义图片保存的路径
-            save_path = os.path.join(os.getcwd(), "screenshot.png")
+            # 2. 数据持久化路径规范：获取插件专属数据目录
+            # 3. 解决并发冲突：使用时间戳生成唯一文件名
+            data_dir = self.context.get_data_dir()
+            file_name = f"screenshot_{int(time.time())}.png"
+            save_path = os.path.join(data_dir, file_name)
             
-            # 执行全屏截图动作
+            # 执行截图并保存
             img = ImageGrab.grab()
-            
-            # 把截好的图片保存到电脑硬盘上
             img.save(save_path)
             
-            # 把保存好的图片发送到聊天软件中
+            logger.info(f"截图已保存至: {save_path}")
+            
+            # 发送图片
             yield event.image_result(save_path)
             
+            # 发送完后稍微清理一下，不占用过多空间（可选）
+            # os.remove(save_path) 
+            
         except Exception as e:
-            # 如果发生任何意外错误，把具体的错误原因发出来，方便排查
-            yield event.plain_result(f"截图失败了，错误详情：{str(e)}")
+            # 4. 异常信息脱敏：不把具体代码错误发给用户，但记入日志
+            logger.error(f"截图插件运行出错: {str(e)}")
+            yield event.plain_result("❌ 截图过程中发生未知错误，请联系管理员查看日志。")

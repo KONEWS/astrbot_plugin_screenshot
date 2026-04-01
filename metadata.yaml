@@ -1,7 +1,7 @@
 name: astrbot_plugin_screenshot # 插件唯一识别名，必须以 astrbot_plugin_ 开头
 display_name: 完美截图插件 # 用于展示的名字
 desc: 使用Python原生截图，解决Win11高分屏缩放截不全的问题 # 插件简短描述
-version: v1.0.0 # 插件版本号
+version: v1.1.0 # 插件版本号
 author: KONEHWS # 作者
 repo: https://github.com/KONEWS/astrbot_plugin_screenshot # 插件的仓库地址
 support_platforms:
