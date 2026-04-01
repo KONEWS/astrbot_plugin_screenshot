@@ -1,24 +1,37 @@
-from astrbot.api.event import filter, AstrMessageEvent, MessageEventResult
+import os
+import ctypes
+from PIL import ImageGrab
+# 【核心修复】不使用星号模糊导入，而是精准指定我们需要 AstrBot 的 filter 和事件工具
+from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
-from astrbot.api import logger
 
-@register("helloworld", "YourName", "一个简单的 Hello World 插件", "1.0.0")
-class MyPlugin(Star):
+@register("python_screenshot", "知我麻社", "使用Python原生截图，解决Win11缩放截不全问题", "1.0.0")
+class PythonScreenshotPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
 
-    async def initialize(self):
-        """可选择实现异步的插件初始化方法，当实例化该插件类之后会自动调用该方法。"""
-
-    # 注册指令的装饰器。指令名为 helloworld。注册成功后，发送 `/helloworld` 就会触发这个指令，并回复 `你好, {user_name}!`
-    @filter.command("helloworld")
-    async def helloworld(self, event: AstrMessageEvent):
-        """这是一个 hello world 指令""" # 这是 handler 的描述，将会被解析方便用户了解插件内容。建议填写。
-        user_name = event.get_sender_name()
-        message_str = event.message_str # 用户发的纯文本消息字符串
-        message_chain = event.get_messages() # 用户所发的消息的消息链 # from astrbot.api.message_components import *
-        logger.info(message_chain)
-        yield event.plain_result(f"Hello, {user_name}, 你发了 {message_str}!") # 发送一条纯文本消息
-
-    async def terminate(self):
-        """可选择实现异步的插件销毁方法，当插件被卸载/停用时会调用。"""
+    # 自定义的触发词
+    @filter.command("电脑截图")
+    async def take_screenshot(self, event: AstrMessageEvent):
+        # 先回复一句提示，让用户知道机器人在干活
+        yield event.plain_result("正在截取当前屏幕，请稍候...")
+        
+        try:
+            # 调用系统底层接口，强制适配高 DPI 缩放，防止画面被裁剪
+            ctypes.windll.user32.SetProcessDPIAware()
+            
+            # 定义图片保存的路径
+            save_path = os.path.join(os.getcwd(), "screenshot.png")
+            
+            # 执行全屏截图动作
+            img = ImageGrab.grab()
+            
+            # 把截好的图片保存到电脑硬盘上
+            img.save(save_path)
+            
+            # 把保存好的图片发送到聊天软件中
+            yield event.image_result(save_path)
+            
+        except Exception as e:
+            # 如果发生任何意外错误，把具体的错误原因发出来，方便排查
+            yield event.plain_result(f"截图失败了，错误详情：{str(e)}")
