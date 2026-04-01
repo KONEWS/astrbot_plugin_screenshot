@@ -1,14 +1,32 @@
-# astrbot-plugin-helloworld
+# 完美截图插件 (AstrBot Plugin)
 
-AstrBot 插件模板 / A template plugin for AstrBot plugin feature
+这是一个为 AstrBot 开发的专属屏幕截图插件，致力于解决 Windows 系统下常见的截图缩放裁剪问题。
 
-> [!NOTE]
-> This repo is just a template of [AstrBot](https://github.com/AstrBotDevs/AstrBot) Plugin.
-> 
-> [AstrBot](https://github.com/AstrBotDevs/AstrBot) is an agentic assistant for both personal and group conversations. It can be deployed across dozens of mainstream instant messaging platforms, including QQ, Telegram, Feishu, DingTalk, Slack, LINE, Discord, Matrix, etc. In addition, it provides a reliable and extensible conversational AI infrastructure for individuals, developers, and teams. Whether you need a personal AI companion, an intelligent customer support agent, an automation assistant, or an enterprise knowledge base, AstrBot enables you to quickly build AI applications directly within your existing messaging workflows.
+## 🌟 核心优势 (优点)
 
-# Supports
+* **突破系统缩放限制**：通过直接调用 Windows 底层 DPI 接口 (`SetProcessDPIAware`)，完美解决 Win11/Win10 环境下开启 125%、150% 等高分屏缩放时，默认截图脚本只能截取左上角四分之一画面的痛点。
+* **响应迅速**：采用 Python 原生图像处理库 (`Pillow`) 直接截图，无需每次唤醒额外的 PowerShell 进程，截图并发送的延迟更低。
+* **全自动部署**：内置完整的 `requirements.txt` 依赖清单，用户在 AstrBot 面板上传后，系统会自动安装环境，实现真正的“即插即用”。
+* **多平台兼容**：在配置中已声明适配主流聊天平台（QQ、微信、Telegram），确保跨平台消息发送稳定。
 
-- [AstrBot Repo](https://github.com/AstrBotDevs/AstrBot)
-- [AstrBot Plugin Development Docs (Chinese)](https://docs.astrbot.app/dev/star/plugin-new.html)
-- [AstrBot Plugin Development Docs (English)](https://docs.astrbot.app/en/dev/star/plugin-new.html)
+## ⚠️ 局限性说明 (缺点)
+
+为了保持客观，安装前请注意本插件的以下局限性：
+* **仅限主屏幕**：目前版本默认仅截取系统的主显示器画面。如果你的电脑外接了多块屏幕，它不会截取副屏的内容。
+* **依赖图形界面**：由于需要调用系统底层的画面渲染，本插件**必须**运行在有物理显示器（或正常的虚拟桌面）的 Windows 电脑上。如果你把机器人部署在纯命令行的 Linux 云服务器（无头环境）上，本插件将无法截取画面并会报错。
+
+## 🚀 安装与使用
+
+**安装方法：**
+1. 在本仓库下载打包好的 `.zip` 插件文件（或直接在本地将 `main.py`、`metadata.yaml`、`requirements.txt` 三个文件压缩为 zip）。
+2. 进入 AstrBot 的 WebUI 管理面板。
+3. 在插件管理页面选择“上传插件”，选中 `.zip` 文件并安装。
+4. 重启 AstrBot 后台或启用该插件。
+
+**使用指令：**
+在支持的聊天软件中对机器人发送：
+> **电脑截图**
+
+机器人会回复“正在截取当前屏幕，请稍候...”，并随后发送完整的高清全屏截图。
+
+基于 AstrBot 框架开发。
