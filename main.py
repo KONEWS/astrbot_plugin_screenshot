@@ -16,7 +16,7 @@ from astrbot.api.star import Context, Star, register, StarTools
 from astrbot.api import logger
 
 
-@register("astrbot_plugin_screenshot", "KONEHWS", "高稳定截图插件", "1.2.1")
+@register("astrbot_plugin_screenshot", "KONEHWS", "稳定截图插件", "1.2.2")
 class PythonScreenshotPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
@@ -39,12 +39,6 @@ class PythonScreenshotPlugin(Star):
 
     # ========================
     # 指令入口
-    # 用法：
-    #   电脑截图                -> 截图 + AI 默认分析
-    #   电脑截图 5              -> 延迟 5 秒后截图 + AI 默认分析
-    #   电脑截图 这里在做什么   -> 截图 + 自定义提示词
-    #   电脑截图 5 这里在做什么 -> 延迟 5 秒 + 自定义提示词
-    # 注意：需要 AstrBot 配置的模型具备 Vision（视觉）能力
     # ========================
     @filter.command("电脑截图")
     async def take_screenshot(self, event: AstrMessageEvent):
@@ -63,7 +57,8 @@ class PythonScreenshotPlugin(Star):
 
         # 执行截图
         try:
-            save_path = self._capture_and_save()
+            # ✅ 修改 4：使用 to_thread 将耗时的同步 I/O 操作扔给线程池，防止阻塞事件循环
+            save_path = await asyncio.to_thread(self._capture_and_save)
         except RuntimeError as e:
             yield event.plain_result(str(e))
             return
@@ -83,13 +78,12 @@ class PythonScreenshotPlugin(Star):
             yield event.plain_result(analysis)
         except Exception as e:
             logger.error(f"AI 分析失败: {e}", exc_info=True)
-            yield event.plain_result("❌ AI 分析失败，请确认所用模型是否支持 Vision 视觉能力")
+            yield event.plain_result("❌ AI 分析发生错误，请查看日志")
 
         self._schedule_cleanup(save_path, delay_seconds=30)
 
     # ========================
     # 参数解析
-    # 格式：电脑截图 [延迟秒数] [提示词]
     # ========================
     @staticmethod
     def _parse_args(msg_str: str) -> tuple[int, str]:
@@ -99,7 +93,8 @@ class PythonScreenshotPlugin(Star):
             return 0, default_prompt
         parts = rest.split(None, 1)
         if parts[0].isdigit():
-            delay = int(parts[0])
+            # ✅ 修改 1：增加延迟上限限制，防止恶意输入导致协程无限挂起
+            delay = min(int(parts[0]), 60)
             prompt = parts[1].strip() if len(parts) > 1 else default_prompt
         else:
             delay = 0
@@ -119,7 +114,7 @@ class PythonScreenshotPlugin(Star):
                 logger.info(f"截图成功，尺寸: {img.size}")
         except Exception as e:
             logger.error(f"截图失败: {e}", exc_info=True)
-            raise RuntimeError("❌ 截图失败，请查看日志") from e
+            raise RuntimeError("❌ 截图失败，请查看物理显示器是否正常工作") from e
 
         data_dir = StarTools.get_data_dir()
         data_dir.mkdir(parents=True, exist_ok=True)
@@ -132,11 +127,15 @@ class PythonScreenshotPlugin(Star):
     # 调用 AstrBot 内置 LLM 分析截图
     # ========================
     async def _analyze(self, image_path: Path, prompt: str) -> str:
+        # ✅ 修改 3：缺失 LLM 供应商的判空保护
+        provider = self.context.get_using_provider()
+        if not provider:
+            return "❌ 尚未配置或启用任何大模型供应商，无法进行图片分析。"
+
         with open(image_path, "rb") as f:
             image_b64 = base64.b64encode(f.read()).decode("utf-8")
 
-        # ✅ 直接使用字典形式解包传参，彻底解决序列化报错
-        response = await self.context.get_using_provider().text_chat(
+        response = await provider.text_chat(
             prompt=prompt,
             image_urls=[f"data:image/png;base64,{image_b64}"]
         )
@@ -153,13 +152,16 @@ class PythonScreenshotPlugin(Star):
         task.add_done_callback(self._background_tasks.discard)
 
     async def _safe_delete(self, path: Path, delay_seconds: int):
+        # ✅ 修改 2：将文件删除逻辑移入 finally 块，防止任务被强杀时发生资源泄漏
         try:
             await asyncio.sleep(delay_seconds)
+        finally:
             if path.exists():
-                path.unlink()
-                logger.info(f"已清理截图文件: {path}")
-        except Exception as e:
-            logger.warning(f"清理文件失败: {e}")
+                try:
+                    path.unlink()
+                    logger.info(f"已安全清理截图文件: {path}")
+                except Exception as e:
+                    logger.warning(f"文件删除失败，可能被占用: {e}")
 
     async def terminate(self):
         """插件销毁：取消所有未完成的后台清理任务。"""
