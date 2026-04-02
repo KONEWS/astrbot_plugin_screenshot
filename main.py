@@ -16,7 +16,7 @@ from astrbot.api.star import Context, Star, register, StarTools
 from astrbot.api import logger
 
 
-@register("astrbot_plugin_screenshot", "KONEHWS", "稳定截图插件", "1.2.2")
+@register("astrbot_plugin_screenshot", "KONEHWS", "截图分析插件", "1.2.2")
 class PythonScreenshotPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
