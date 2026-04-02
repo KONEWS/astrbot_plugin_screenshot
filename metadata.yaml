@@ -1,10 +1,6 @@
 name: astrbot_plugin_screenshot
-display_name: 稳定截图插件
-desc: 高稳定截图插件
-version: 2.0.5
+display_name: 电脑截图
+desc: 截取主屏幕并通过聊天发送图片，支持延迟截图。
+version: v1.2.1
 author: KONEHWS
 repo: https://github.com/KONEHWS/astrbot_plugin_screenshot
-support_platforms:
-  - qq
-  - wechat
-  - telegram
