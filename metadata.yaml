@@ -1,9 +1,9 @@
 name: astrbot_plugin_screenshot
-display_name: 完美截图插件
-desc: 适配Win11缩放的全屏截图插件
-version: 1.2.0
+display_name: 稳定截图插件
+desc: 高稳定截图插件
+version: 2.0.5
 author: KONEHWS
-repo: https://github.com/KONEWS/astrbot_plugin_screenshot
+repo: https://github.com/KONEHWS/astrbot_plugin_screenshot
 support_platforms:
   - qq
   - wechat
