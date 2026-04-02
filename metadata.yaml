@@ -1,6 +1,6 @@
 name: astrbot_plugin_screenshot
-display_name: 完美截图分析插件
-desc: 高稳定全屏截图与 AI 视觉分析工具（完美适配 Win11 DPI 缩放）
+display_name: 高稳定截图插件
+desc: 高稳定全屏截图与 AI 视觉分析工具（适配 Win11 DPI 缩放）
 version: 1.2.1
 author: KONEHWS
 repo: https://github.com/KONEHWS/astrbot_plugin_screenshot
